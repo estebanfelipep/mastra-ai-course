@@ -3,6 +3,17 @@ import { openai } from '@ai-sdk/openai'
 import { Memory } from '@mastra/memory'
 import { LibSQLStore } from '@mastra/libsql'
 import { getTransactionsTool } from '../tools/get-transactions-tool'
+import { MCPClient } from '@mastra/mcp'
+
+const mcp = new MCPClient({
+  servers: {
+    zapier: {
+      url: new URL(process.env.ZAPIER_MCP_URL || '')
+    }
+  }
+})
+
+const mcpTools = await mcp.getTools()
 
 export const financialAgent = new Agent({
   name: 'Financial Assistant Agent',
@@ -32,12 +43,17 @@ TOOLS
 - Use the getTransactions tool to fetch financial transaction data.
 - Analyze the transaction data to answer user questions about their spending.
 
+ZAPIER INTEGRATION (when configured):
+- You may have access to Gmail tools for reading and sending emails
+- You can only find emails
+- Use these tools when users ask for email-related assistance
+
 SUCCESS CRITERIA
 - Deliver accurate and helpful analysis of transaction data.
 - Achieve high user satisfaction through clear and helpful responses.
 - Maintain user trust by ensuring data privacy and security.`,
   model: openai('gpt-4o'), // You can use "gpt-3.5-turbo" if you prefer
-  tools: { getTransactionsTool }, // Add our tool here
+  tools: { getTransactionsTool, ...mcpTools }, // Add our custom tool and MCP tools
   memory: new Memory({
     storage: new LibSQLStore({
       url: 'file:../../memory.db' // local file-system database. Location is relative to the output directory `.mastra/output`
