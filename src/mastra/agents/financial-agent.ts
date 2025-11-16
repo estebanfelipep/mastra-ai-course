@@ -2,7 +2,7 @@ import { Agent } from '@mastra/core/agent'
 import { openai } from '@ai-sdk/openai'
 import { Memory } from '@mastra/memory'
 import { LibSQLStore } from '@mastra/libsql'
-// We'll import our tool in a later step
+import { getTransactionsTool } from '../tools/get-transactions-tool'
 
 export const financialAgent = new Agent({
   name: 'Financial Assistant Agent',
@@ -28,10 +28,19 @@ CONSTRAINTS & BOUNDARIES
 - Avoid discussing topics outside of the transaction data provided.
 - Never make assumptions about the user's financial situation beyond what's in the data.
 
+TOOLS
+- Use the getTransactions tool to fetch financial transaction data.
+- Analyze the transaction data to answer user questions about their spending.
+
 SUCCESS CRITERIA
 - Deliver accurate and helpful analysis of transaction data.
 - Achieve high user satisfaction through clear and helpful responses.
 - Maintain user trust by ensuring data privacy and security.`,
   model: openai('gpt-4o'), // You can use "gpt-3.5-turbo" if you prefer
-  tools: {} // We'll add tools in a later step
+  tools: { getTransactionsTool }, // Add our tool here
+  memory: new Memory({
+    storage: new LibSQLStore({
+      url: 'file:../../memory.db' // local file-system database. Location is relative to the output directory `.mastra/output`
+    })
+  }) // Add memory here
 })
