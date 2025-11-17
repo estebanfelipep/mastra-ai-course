@@ -6,6 +6,8 @@ import {
   contentWorkflow,
   aiContentWorkflow
 } from './workflows/content-workflow'
+import { parallelAnalysisWorkflow } from './workflows/parallel-workflow'
+import { conditionalWorkflow } from './workflows/conditional-workflow'
 import { weatherAgent } from './agents/weather-agent'
 import { financialAgent } from './agents/financial-agent'
 import { memoryAgent } from './agents/memory-agent'
@@ -19,7 +21,13 @@ import {
 import { registerApiRoute } from '@mastra/core/server'
 
 export const mastra = new Mastra({
-  workflows: { weatherWorkflow, contentWorkflow, aiContentWorkflow },
+  workflows: {
+    weatherWorkflow,
+    contentWorkflow,
+    aiContentWorkflow,
+    parallelAnalysisWorkflow,
+    conditionalWorkflow
+  },
   agents: {
     weatherAgent,
     financialAgent,
