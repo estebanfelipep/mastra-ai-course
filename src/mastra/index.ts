@@ -4,6 +4,8 @@ import { LibSQLStore } from '@mastra/libsql'
 import { weatherWorkflow } from './workflows/weather-workflow'
 import { weatherAgent } from './agents/weather-agent'
 import { financialAgent } from './agents/financial-agent'
+import { memoryAgent } from './agents/memory-agent'
+import { learningAssistantAgent } from './agents/learning-assistant'
 import {
   toolCallAppropriatenessScorer,
   completenessScorer,
@@ -13,7 +15,7 @@ import { registerApiRoute } from '@mastra/core/server'
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
-  agents: { weatherAgent, financialAgent },
+  agents: { weatherAgent, financialAgent, memoryAgent, learningAssistantAgent },
   scorers: {
     toolCallAppropriatenessScorer,
     completenessScorer,
