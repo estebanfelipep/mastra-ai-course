@@ -2,11 +2,15 @@ import { Mastra } from '@mastra/core/mastra'
 import { PinoLogger } from '@mastra/loggers'
 import { LibSQLStore } from '@mastra/libsql'
 import { weatherWorkflow } from './workflows/weather-workflow'
-import { contentWorkflow } from './workflows/content-workflow'
+import {
+  contentWorkflow,
+  aiContentWorkflow
+} from './workflows/content-workflow'
 import { weatherAgent } from './agents/weather-agent'
 import { financialAgent } from './agents/financial-agent'
 import { memoryAgent } from './agents/memory-agent'
 import { learningAssistantAgent } from './agents/learning-assistant'
+import { contentAgent } from './agents/content-agent'
 import {
   toolCallAppropriatenessScorer,
   completenessScorer,
@@ -15,8 +19,14 @@ import {
 import { registerApiRoute } from '@mastra/core/server'
 
 export const mastra = new Mastra({
-  workflows: { weatherWorkflow, contentWorkflow },
-  agents: { weatherAgent, financialAgent, memoryAgent, learningAssistantAgent },
+  workflows: { weatherWorkflow, contentWorkflow, aiContentWorkflow },
+  agents: {
+    weatherAgent,
+    financialAgent,
+    memoryAgent,
+    learningAssistantAgent,
+    contentAgent
+  },
   scorers: {
     toolCallAppropriatenessScorer,
     completenessScorer,

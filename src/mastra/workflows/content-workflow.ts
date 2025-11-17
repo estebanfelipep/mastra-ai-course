@@ -76,9 +76,136 @@ const enhanceContentStep = createStep({
   }
 })
 
+const generateSummaryStep = createStep({
+  id: 'generate-summary',
+  description: 'Creates a summary of the content',
+  inputSchema: z.object({
+    content: z.string(),
+    type: z.string(),
+    wordCount: z.number(),
+    metadata: z.object({
+      readingTime: z.number(),
+      difficulty: z.enum(['easy', 'medium', 'hard']),
+      processedAt: z.string()
+    })
+  }),
+  outputSchema: z.object({
+    content: z.string(),
+    type: z.string(),
+    wordCount: z.number(),
+    metadata: z.object({
+      readingTime: z.number(),
+      difficulty: z.enum(['easy', 'medium', 'hard']),
+      processedAt: z.string()
+    }),
+    summary: z.string()
+  }),
+  execute: async ({ inputData }) => {
+    const { content, type, wordCount, metadata } = inputData
+
+    // Create a simple summary from first sentence
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0)
+    const firstSentence = sentences[0]?.trim() + '.'
+
+    // Generate summary based on content length
+    let summary = firstSentence
+    if (wordCount > 50) {
+      summary += ` This ${type} contains ${wordCount} words and takes approximately ${metadata.readingTime} minute(s) to read.`
+    }
+
+    console.log(`📝 Generated summary: ${summary.length} characters`)
+
+    return {
+      content,
+      type,
+      wordCount,
+      metadata,
+      summary
+    }
+  }
+})
+
+const aiAnalysisStep = createStep({
+  id: 'ai-analysis',
+  description: 'AI-powered content analysis',
+  inputSchema: z.object({
+    content: z.string(),
+    type: z.string(),
+    wordCount: z.number(),
+    metadata: z.object({
+      readingTime: z.number(),
+      difficulty: z.enum(['easy', 'medium', 'hard']),
+      processedAt: z.string()
+    }),
+    summary: z.string()
+  }),
+  outputSchema: z.object({
+    content: z.string(),
+    type: z.string(),
+    wordCount: z.number(),
+    metadata: z.object({
+      readingTime: z.number(),
+      difficulty: z.enum(['easy', 'medium', 'hard']),
+      processedAt: z.string()
+    }),
+    summary: z.string(),
+    aiAnalysis: z.object({
+      score: z.number(),
+      feedback: z.string()
+    })
+  }),
+  execute: async ({ inputData, mastra }) => {
+    const { content, type, wordCount, metadata, summary } = inputData
+
+    // Create prompt for the AI agent
+    const prompt = `
+Analyze this ${type} content:
+
+Content: "${content}"
+Word count: ${wordCount}
+Reading time: ${metadata.readingTime} minutes
+Difficulty: ${metadata.difficulty}
+
+Please provide:
+1. A quality score from 1-10
+2. Brief feedback on strengths and areas for improvement
+
+Format as JSON: {"score": number, "feedback": "your feedback here"}
+    `
+
+    // Get the contentAgent from the mastra instance.
+    const contentAgent = mastra.getAgent('contentAgent')
+    const { text } = await contentAgent.generate([
+      { role: 'user', content: prompt }
+    ])
+
+    // Parse AI response (with fallback)
+    let aiAnalysis
+    try {
+      aiAnalysis = JSON.parse(text)
+    } catch {
+      aiAnalysis = {
+        score: 7,
+        feedback: 'AI analysis completed. ' + text
+      }
+    }
+
+    console.log(`🤖 AI Score: ${aiAnalysis.score}/10`)
+
+    return {
+      content,
+      type,
+      wordCount,
+      metadata,
+      summary,
+      aiAnalysis
+    }
+  }
+})
+
 export const contentWorkflow = createWorkflow({
   id: 'content-processing-workflow',
-  description: 'Validates and enhances content',
+  description: 'Validates, enhances, and summarizes content',
   inputSchema: z.object({
     content: z.string(),
     type: z.enum(['article', 'blog', 'social']).default('article')
@@ -91,9 +218,40 @@ export const contentWorkflow = createWorkflow({
       readingTime: z.number(),
       difficulty: z.enum(['easy', 'medium', 'hard']),
       processedAt: z.string()
+    }),
+    summary: z.string()
+  })
+})
+  .then(validateContentStep)
+  .then(enhanceContentStep)
+  .then(generateSummaryStep)
+  .commit()
+
+export const aiContentWorkflow = createWorkflow({
+  id: 'ai-content-workflow',
+  description: 'AI-enhanced content processing with analysis',
+  inputSchema: z.object({
+    content: z.string(),
+    type: z.enum(['article', 'blog', 'social']).default('article')
+  }),
+  outputSchema: z.object({
+    content: z.string(),
+    type: z.string(),
+    wordCount: z.number(),
+    metadata: z.object({
+      readingTime: z.number(),
+      difficulty: z.enum(['easy', 'medium', 'hard']),
+      processedAt: z.string()
+    }),
+    summary: z.string(),
+    aiAnalysis: z.object({
+      score: z.number(),
+      feedback: z.string()
     })
   })
 })
   .then(validateContentStep)
   .then(enhanceContentStep)
+  .then(generateSummaryStep)
+  .then(aiAnalysisStep)
   .commit()
