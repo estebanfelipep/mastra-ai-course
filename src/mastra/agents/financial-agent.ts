@@ -9,6 +9,14 @@ const mcp = new MCPClient({
   servers: {
     zapier: {
       url: new URL(process.env.ZAPIER_MCP_URL || '')
+    },
+    github: {
+      url: new URL('https://api.githubcopilot.com/mcp'),
+      requestInit: {
+        headers: {
+          Authorization: `Bearer ${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}`
+        }
+      }
     }
   }
 })
@@ -47,6 +55,11 @@ ZAPIER INTEGRATION (when configured):
 - You may have access to Gmail tools for reading and sending emails
 - You can only find emails
 - Use these tools when users ask for email-related assistance
+
+GITHUB INTEGRATION (when configured):
+- You have access to GitHub tools for monitoring repository activity
+- You can summarize recent commits, pull requests, issues, and development patterns
+- Use these tools when users ask about their GitHub repositories or development activity
 
 SUCCESS CRITERIA
 - Deliver accurate and helpful analysis of transaction data.
